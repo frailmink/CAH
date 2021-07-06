@@ -7,16 +7,36 @@ cur = con.cursor() # creates a cursor
 
 app = FastAPI()
 
-@app.get("/card/{card_id}")
-async def card(card_id):
-    for card in cur.execute(f"SELECT * FROM Cards WHERE id = {card_id}"):
+@app.get("/answer_card/{card_id}")
+async def answer_card(card_id):
+    for card in cur.execute(f"SELECT * FROM AnswerCards WHERE id = {card_id}"):
         break
     return {
         "id": card[0],
-        "type": card[1],
-        "text": card[2],
-        "NumGaps": card[3]
+        "text": card[1],
     }
+
+@app.get("/question_card/{card_id}")
+async def question_card(card_id):
+    for card in cur.execute(f"SELECT * FROM QuestionCards WHERE id = {card_id}"):
+        break
+    return {
+        "id": card[0],
+        "text": card[1],
+        "num_gaps": card[2]
+    }
+
+@app.get("/num_answer_cards")
+async def question_card():
+    for count in cur.execute("SELECT COUNT() FROM AnswerCards"):
+        break
+    return count[0]
+
+@app.get("/num_question_cards")
+async def question_card():
+    for count in cur.execute("SELECT COUNT() FROM QuestionCards"):
+        break
+    return count[0]
 
 @app.get("/")
 async def root():

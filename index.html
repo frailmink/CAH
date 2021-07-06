@@ -8,15 +8,43 @@
 
 <body>
 
-    <label for="string">Card ID:</label>
-    <input type="number" id="id" name="id" onchange="UpdateCard()">
+    <label for="question_id">Question Card ID (max <span id="q_max"></span>):</label>
+    <input type="number" id="question_id" name="question_id" onchange="QuestionCard()">
 
-    <h1><span id="results"></span></h1>
+    <h1><span id="q_results"></span></h1>
+
+    <label for="answer_id">Answer Card ID (max <span id="a_max"></span>):</label>
+    <input type="number" id="answer_id" name="answer_id" onchange="AnswerCard()">
+
+    <h1><span id="a_results"></span></h1>
 
     <script>
-        function UpdateCard() {
-            $.get("card/" + $("#id").val(), function (result) {
-                $("#results").html(result.text);
+        $(document).ready(function() {
+            NumAnswerCards();
+            NumQuestionCards();
+        });
+
+        function QuestionCard() {
+            $.get("question_card/" + $("#question_id").val(), function(result) {
+                $("#q_results").html(result.text);
+            });
+        }
+
+        function AnswerCard() {
+            $.get("answer_card/" + $("#answer_id").val(), function(result) {
+                $("#a_results").html(result.text);
+            });
+        }
+
+        function NumQuestionCards() {
+            $.get("num_question_cards/", function(result) {
+                $("#q_max").html(result);
+            });
+        }
+
+        function NumAnswerCards() {
+            $.get("num_answer_cards/", function(result) {
+                $("#a_max").html(result);
             });
         }
     </script>
