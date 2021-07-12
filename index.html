@@ -8,45 +8,76 @@
 
 <body>
 
-    <label for="question_id">Question Card ID (max <span id="q_max"></span>):</label>
-    <input type="number" id="question_id" name="question_id" onchange="QuestionCard()">
+    <button type="button" onclick="PickCard()">Pick a card</button>
 
-    <h1><span id="q_results"></span></h1>
-
-    <label for="answer_id">Answer Card ID (max <span id="a_max"></span>):</label>
-    <input type="number" id="answer_id" name="answer_id" onchange="AnswerCard()">
-
-    <h1><span id="a_results"></span></h1>
+    <h1><span id="card"></span></h1>
 
     <script>
-        $(document).ready(function() {
-            NumAnswerCards();
-            NumQuestionCards();
-        });
 
-        function QuestionCard() {
-            $.get("question_card/" + $("#question_id").val(), function(result) {
-                $("#q_results").html(result.text);
+        // $(document).ready(function () {
+        //     TestAnswerCards();
+        // });
+
+        function QuestionCard(id, callback) {
+            $.get("question_card/" + id, function (result) {
+                callback(result.text, result.num_gaps);
             });
         }
 
-        function AnswerCard() {
-            $.get("answer_card/" + $("#answer_id").val(), function(result) {
-                $("#a_results").html(result.text);
+        function AnswerCard(id, callback) {
+            $.get("answer_card/" + id, function (result) {
+                callback(result.text);
             });
         }
 
-        function NumQuestionCards() {
-            $.get("num_question_cards/", function(result) {
-                $("#q_max").html(result);
+        function NumQuestionCards(callback) {
+            $.get("num_question_cards", function (result) {
+                callback(result);
             });
         }
 
-        function NumAnswerCards() {
-            $.get("num_answer_cards/", function(result) {
-                $("#a_max").html(result);
+        function NumAnswerCards(callback) {
+            $.get("num_answer_cards", function (result) {
+                callback(result);
             });
         }
+
+        function PickCard() {
+            NumQuestionCards(function (max_number) {
+                random_number = Random(max_number);
+                QuestionCard(random_number, function (card, gaps) {
+                    $("#card").html(card + "     " + gaps);
+                })
+            })
+        }
+
+        function Random(max_num) {
+            random_num = Math.floor(Math.random() * max_num) + 1;
+            return random_num;
+        }
+
+        function AnswerCards(ids, cards, callback) {
+            if (ids.length == 1) {
+                AnswerCard(ids[0], function (card) {
+                    cards.push(card)
+                    callback(cards);
+                });
+            } else {
+                AnswerCard(ids[0], function (card) {
+                    ids.shift();
+                    cards.push(card)
+                    AnswerCards(ids, cards, callback);
+                });
+            }
+        }
+
+        function TestAnswerCards() {
+            AnswerCards([21, 23, 34], [], function (cards) {
+                console.log(cards);
+                // output should be ["Soft, kissy missionary sex", "Agriculture", "Boogers"]
+            })
+        }
+
     </script>
 
 </body>
