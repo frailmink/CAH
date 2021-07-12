@@ -3,7 +3,7 @@
 
 <head>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <title>Page Title</title>
+    <title>Cards Against Humanity</title>
 </head>
 
 <body>
@@ -12,7 +12,12 @@
 
     <h1><span id="card"></span></h1>
 
+    <button type="button" onclick="Rando()">Rando Cardrissian</button>
+
     <script>
+
+        var question_card = "";
+        var num_gaps = 0;
 
         // $(document).ready(function () {
         //     TestAnswerCards();
@@ -46,7 +51,13 @@
             NumQuestionCards(function (max_number) {
                 random_number = Random(max_number);
                 QuestionCard(random_number, function (card, gaps) {
-                    $("#card").html(card + "     " + gaps);
+                    question_card = card;
+                    num_gaps = gaps;
+                    text = question_card;
+                    for (let i = 0; i < num_gaps; i++) {
+                        text = text.replace("{}", "_____");
+                    }
+                    $("#card").html(text);
                 })
             })
         }
@@ -71,12 +82,36 @@
             }
         }
 
+        function Rando() {
+            NumAnswerCards(function (max_number) {
+                var ids = [];
+                for (let i = 0; i < num_gaps; i++) {
+                    ids.push(Random(max_number));   
+                }
+                AnswerCards(ids, [], function (cards) {
+                    text = question_card;
+                    for (let i = 0; i < num_gaps; i++) {
+                        text = text.replace("{}", "<span style='color:red'>" + cards[i] + "</span>");
+                    }
+                    $("#card").html(text);
+                })
+            })
+        }
+
         function TestAnswerCards() {
             AnswerCards([21, 23, 34], [], function (cards) {
                 console.log(cards);
                 // output should be ["Soft, kissy missionary sex", "Agriculture", "Boogers"]
             })
         }
+
+        /*
+        TO DO:
+        comments
+        stop rando from pulling out two cards the same
+        fix crash when q card is empty
+        format card nicely
+        */
 
     </script>
 
