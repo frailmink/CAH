@@ -27,13 +27,13 @@ async def question_card(card_id):
     }
 
 @app.get("/num_answer_cards")
-async def question_card():
+async def num_answer_cards():
     for count in cur.execute("SELECT COUNT() FROM AnswerCards"):
         break
     return count[0]
 
 @app.get("/num_question_cards")
-async def question_card():
+async def num_question_cards():
     for count in cur.execute("SELECT COUNT() FROM QuestionCards"):
         break
     return count[0]
