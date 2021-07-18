@@ -1,4 +1,4 @@
-# run this with uvicorn app:main and go to http://localhost:8000
+# run this with uvicorn main:app and go to http://localhost:8000
 # for testing go to http://localhost:8000/docs
 
 from fastapi import FastAPI
