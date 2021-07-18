@@ -15,7 +15,7 @@
     <button type="button" onclick="Rando()">Rando Cardrissian</button>
 
     <script>
-
+        // creates global variables so that it can be accessed in different functions
         var question_card = "";
         var num_gaps = 0;
 
@@ -23,70 +23,93 @@
         //     TestAnswerCards();
         // });
 
+        // function that calls the route question_card/ and gets the question card
+        // returns the question card through the use of a callback that is specified when the function is called
         function QuestionCard(id, callback) {
             $.get("question_card/" + id, function (result) {
                 callback(result.text, result.num_gaps);
             });
         }
 
+        // function that calls the route answer_card/ and gets the answer card
+        // returns the answer card through the use of a callback that is specified when the function is called
         function AnswerCard(id, callback) {
             $.get("answer_card/" + id, function (result) {
                 callback(result.text);
             });
         }
 
+        // function that calls the route num_question_cards/ and gets the number of question cards in the db
+        // returns the number of question cards in the db through the use of a callback that is specified when the function is called
         function NumQuestionCards(callback) {
             $.get("num_question_cards", function (result) {
                 callback(result);
             });
         }
 
+        // function that calls the route num_answer_cards/ and gets the number of answer cards in the db
+        // returns the number of answer cards in the db through the use of a callback that is specified when the function is called
         function NumAnswerCards(callback) {
             $.get("num_answer_cards", function (result) {
                 callback(result);
             });
         }
 
+        // function that picks a question card through callbacks
         function PickCard() {
+            // calls the function NumQuestionCards
             NumQuestionCards(function (max_number) {
                 random_number = Random(max_number);
                 QuestionCard(random_number, function (card, gaps) {
                     question_card = card;
                     num_gaps = gaps;
                     text = question_card;
+                    // for loop to that changes the look of the question card so that it does not have a {} in it
                     for (let i = 0; i < num_gaps; i++) {
                         text = text.replace("{}", "_____");
                     }
+                    // changes the contents of the span in html to the question card
                     $("#card").html(text);
                 })
             })
         }
 
+        // function that returns a random number between 1 and max_num
         function Random(max_num) {
+            // gets the random number
             random_num = Math.floor(Math.random() * max_num) + 1;
+            // returns the random number
             return random_num;
         }
 
+        // function that returns more than one answer card in the form of a list
         function AnswerCards(ids, cards, callback) {
+            // in the special case that there is only a need for one answer card we can just call the already made function AnswerCard
             if (ids.length == 1) {
                 AnswerCard(ids[0], function (card) {
+                    // adds the card to the list
                     cards.push(card)
+                    // performs the callback with the list cards
                     callback(cards);
                 });
             } else {
+                // otherwise, it calls itself recursively until there is only one card left to get
                 AnswerCard(ids[0], function (card) {
+                    // deletes the id that has been used
                     ids.shift();
+                    // saves the card into the list
                     cards.push(card)
                     AnswerCards(ids, cards, callback);
                 });
             }
         }
 
+        // function that prints out random answers for the question card
         function Rando() {
             NumAnswerCards(function (max_number) {
                 var ids = [];
                 for (let i = 0; i < num_gaps; i++) {
-                    ids.push(Random(max_number));   
+                    ids.push(Random(max_number));
                 }
                 AnswerCards(ids, [], function (cards) {
                     text = question_card;
@@ -98,6 +121,7 @@
             })
         }
 
+        // function to test out function AnswerCards
         function TestAnswerCards() {
             AnswerCards([21, 23, 34], [], function (cards) {
                 console.log(cards);
@@ -107,9 +131,8 @@
 
         /*
         TO DO:
-        comments
         stop rando from pulling out two cards the same
-        fix crash when q card is empty
+        fix crash when question card is empty
         format card nicely
         */
 
