@@ -39,7 +39,7 @@
     </div>
 
     <div id="submit-choice" style="display: none;">
-        <button onClick="SubmitChoice(playerId);">Submit answer</button>
+        <button onClick="SubmitChoice(playerId);">Submit choice</button>
     </div>
 
     <div id="answer-submited" style="display: none;">
@@ -69,7 +69,7 @@
         }
 
         async function JoinGame(game_id, player_id) {
-            /* TODO: check if there is already a game and if there isnt create a new one */
+            // TODO: check if there is already a game and if there isnt create a new one
             await fetch("http://localhost:8000/join_game/" + game_id + "/" + player_id, { method: "POST" });
             $("#join-game").css("display", "none");
             $("#question").css("display", "inline");
@@ -104,12 +104,18 @@
         }
 
         async function CreateDropdownCzar(choices) {
+            playerChoice = ""
             $("#czar-choice").find("option").remove();
-            count = 0;
             for (var choice of choices) {
-                var option = new Option(choice[1], choice[0]);
+                for (var card of choice[1]) {
+                    response = await fetch("http://localhost:8000/answer_card/" + card);
+                    json = await response.json();
+                    ans = json;
+                    playerChoice = playerChoice + ans["text"] + " + "
+                }
+                var option = new Option(playerChoice, choice[0]);
                 $("#czar-choice").append(option);
-                count += 1;
+                playerChoice = ""
             }
         }
 
@@ -132,6 +138,12 @@
                     await timeout(1000);
                     czarChoice = await CheckCzarChoice();
                 }
+                // TODO: display the points of each player
+                if (czarChoice[1] == player_id) {
+                    $("#answer-submited").html("Congratulations, you won the round!!!");
+                } else {
+                    $("#answer-submited").html("Unfortunately, you didnt win the round");
+                }
             }
         }
 
@@ -153,7 +165,7 @@
             choice = json;
             return choice;
         }
-        
+
         async function SubmitChoice(player_id) {
             pointWinner = $("#czar-choice").val();
             await fetch("http://localhost:8000/give_points/" + player_id + "/" + pointWinner, { method: "POST" });
