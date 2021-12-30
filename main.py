@@ -128,6 +128,12 @@ async def create_game():
 
 @app.post("/join_game/{game_id}/{player_id}")
 async def join_game(player_id: int, game_id: int):
+    try:
+        games = cur.execute(f"SELECT * FROM Games").fetchone()[0]
+    except:
+        game_id = await create_game()
+        game_id = game_id[0]
+
     list_players = cur.execute(f"SELECT ListPlayerID FROM Games WHERE id = {game_id}").fetchone()[0]
     list_players = json.loads(list_players)
     list_players.append(player_id)
