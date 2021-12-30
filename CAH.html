@@ -59,7 +59,7 @@
         var listAns = "[";
 
         async function CreatePlayer() {
-            response = await fetch("http://localhost:8000/create_player", { method: "POST" });
+            response = await fetch("/create_player", { method: "POST" });
             json = await response.json();
             playerId = JSON.parse(json);
             name = $("#name").val();
@@ -70,22 +70,22 @@
 
         async function JoinGame(game_id, player_id) {
             // TODO: check if there is already a game and if there isnt create a new one
-            await fetch("http://localhost:8000/join_game/" + game_id + "/" + player_id, { method: "POST" });
+            await fetch("/join_game/" + game_id + "/" + player_id, { method: "POST" });
             $("#join-game").css("display", "none");
             $("#question").css("display", "inline");
-            response = await fetch("http://localhost:8000/return_qcard/" + gameId);
+            response = await fetch("/return_qcard/" + gameId);
             json = await response.json();
             qcard = json;
             numGaps = qcard[1];
             gapCountdown = numGaps;
             $("#question").html(qcard[0]);
-            response = await fetch("http://localhost:8000/czar/" + gameId + "/" + player_id);
+            response = await fetch("/czar/" + gameId + "/" + player_id);
             json = await response.json();
             czar = JSON.parse(json);
             if (czar == false) {
                 $("#answer").css("display", "inline");
                 $("#submit-answer").css("display", "inline");
-                response = await fetch("http://localhost:8000/deal_cards/" + player_id, { method: "POST" });
+                response = await fetch("/deal_cards/" + player_id, { method: "POST" });
                 json = await response.json();
                 cards = json;
                 for (let i = 0; i < 7; i++) {
@@ -108,7 +108,7 @@
             $("#czar-choice").find("option").remove();
             for (var choice of choices) {
                 for (var card of choice[1]) {
-                    response = await fetch("http://localhost:8000/answer_card/" + card);
+                    response = await fetch("/answer_card/" + card);
                     json = await response.json();
                     ans = json;
                     playerChoice = playerChoice + ans["text"] + " + "
@@ -128,7 +128,7 @@
                 czarChoice = [false]
                 choice = $("#answer").val();
                 listAns = listAns + choice + "]";
-                await fetch("http://localhost:8000/save_choice/" + player_id + "/" + listAns, { method: "POST" });
+                await fetch("/save_choice/" + player_id + "/" + listAns, { method: "POST" });
                 listAns = "[";
                 $("#question").css("display", "none");
                 $("#answer").css("display", "none");
@@ -153,14 +153,14 @@
         }
 
         async function CheckCzarChoice() {
-            response = await fetch("http://localhost:8000/return_czar_choice/" + gameId);
+            response = await fetch("/return_czar_choice/" + gameId);
             json = await response.json();
             choice = json;
             return choice;
         }
 
         async function CheckPlayerChoices() {
-            response = await fetch("http://localhost:8000/return_choices/" + gameId);
+            response = await fetch("/return_choices/" + gameId);
             json = await response.json();
             choice = json;
             return choice;
@@ -168,7 +168,7 @@
 
         async function SubmitChoice(player_id) {
             pointWinner = $("#czar-choice").val();
-            await fetch("http://localhost:8000/give_points/" + player_id + "/" + pointWinner, { method: "POST" });
+            await fetch("/give_points/" + player_id + "/" + pointWinner, { method: "POST" });
             $("#choice-submited").css("display", "inline");
             $("#submit-choice").css("display", "none");
             $("#czar-choice").css("display", "none");
@@ -176,7 +176,7 @@
         }
 
         async function EveryoneIn() {
-            await fetch("http://localhost:8000/");
+            await fetch("/???");
         }
 
 
