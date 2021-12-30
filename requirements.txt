@@ -1,0 +1,21 @@
+asgiref==3.3.4
+certifi==2021.5.30
+click==8.0.1
+colorama==0.4.4
+fastapi==0.65.1
+greenlet==1.1.0
+h11==0.12.0
+httptools==0.2.0
+pdfminer==20191125
+pycryptodome==3.10.1
+pydantic==1.8.2
+python-dotenv==0.17.1
+PyYAML==5.4.1
+SQLAlchemy==1.4.18
+starlette==0.14.2
+typing-extensions==3.10.0.0
+uvicorn==0.14.0
+watchgod==0.7
+websockets==9.1
+wincertstore==0.2
+yapf @ file:///tmp/build/80754af9/yapf_1615749224965/work
