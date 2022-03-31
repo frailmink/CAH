@@ -294,9 +294,14 @@
 
         async function CheckEveryoneIn() {
             // checks if any player has pressed the everyone is in button
-            response = await fetch("/check_EveryoneIn/" + gameId);
-            json = await response.json();
-            everyoneInPressed = json;
+            // due to the fact that if a game is not already created this would crash, it does a try catch function to strop this from crashing 
+            try {
+                response = await fetch("/check_EveryoneIn/" + gameId);
+                json = await response.json();
+                everyoneInPressed = json;
+            } catch {
+                everyoneInPressed = false
+            }
             return everyoneInPressed;
         }
 
@@ -357,25 +362,6 @@
             // changes the propery EveryoneIn in the Game in the db so that the game can start
             await fetch("/everyone_in/" + gameId, { method: "POST" });
         }
-
-
-        /*
-    async function SubmitChoice() {
-        yooo = $("#czar-choice").val();
-        woop = $("#p4").val();
-        $("#question").css("display", "inline");
-        $("#question").html(woop);
-        $("#p1").html("yeppppppppppp");
-    }
-
-    b = $("#ans" + (i + 1)).html();
-    $("#ans" + (i + 2)).html(b);
-
-        */
-
-        /* TODO
-        block the joining of the game when the everyone is in button is pressed
-        */
 
     </script>
 
