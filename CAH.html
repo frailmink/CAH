@@ -17,8 +17,28 @@
         <button onClick="JoinGame(gameId, playerId);">Join game</button>
     </div>
 
+    <div id="everyone-in" style="display: none;">
+        <button onClick="EveryoneIn();">everyone in</button>
+    </div>
+
     <div id="question" style="display: none;">
         <span id="question-card"></span>
+    </div>
+
+    <div id="cannot-join" style="display: none;">
+        <span>The game has already started so you cannot enter right now (maybe try later)</span>
+    </div>
+
+    <div id="game-finished" style="display: none;">
+        <span>The game has ended</span>
+    </div>
+
+    <div id="winner" style="display: none;">
+        <span>Congratulations, you are the winner</span>
+    </div>
+
+    <div id="loser" style="display: none;">
+        <span>Unfortunately, you are not the winner (Better luck next time -/(*-*)\- )</span>
     </div>
 
     <select id="answer" style="display: none;">
@@ -43,76 +63,144 @@
     </div>
 
     <div id="answer-submited" style="display: none;">
-        <span>Answer submited</span>
+        <span>Answer submitted</span>
     </div>
 
     <div id="choice-submited" style="display: none;">
-        <span>Choice submited</span>
+        <span>Choice submitted</span>
     </div>
 
     <script>
+        // decleares global varibales
         var name = "";
         var playerId = null;
         var gameId = 1;
         var numGaps = 0;
-        var gapCountdown = 0
+        var gapCountdown = 0;
         var listAns = "[";
+        var numPointsToWin = 10;
 
         async function CreatePlayer() {
+            // creates a new player in the databse and saves the player's id
             response = await fetch("/create_player", { method: "POST" });
             json = await response.json();
             playerId = JSON.parse(json);
             name = $("#name").val();
+            // displayes a welcome message and the button needed to continue with the program, and hides the button needed to create a player
             $("#welcome").html("Welcome " + name);
             $("#create-player").css("display", "none");
             $("#join-game").css("display", "inline");
         }
 
         async function JoinGame(game_id, player_id) {
-            // TODO: check if there is already a game and if there isnt create a new one
-            await fetch("/join_game/" + game_id + "/" + player_id, { method: "POST" });
-            $("#join-game").css("display", "none");
-            $("#question").css("display", "inline");
-            response = await fetch("/return_qcard/" + gameId);
-            json = await response.json();
-            qcard = json;
-            numGaps = qcard[1];
+            // saves the player's id in the list of players in the database
+            // checks if anyone has already started the game before the player was able to join the game and if they have it stops them from joining
+            everyoneInPressed = await CheckEveryoneIn();
+            if (everyoneInPressed == false) {
+                await fetch("/join_game/" + game_id + "/" + player_id, { method: "POST" });
+                $("#join-game").css("display", "none");
+                // displayes the everyone in button
+                $("#everyone-in").css("display", "inline");
+                // checks if any player has pressed the everyone in button
+                while (everyoneInPressed == false) {
+                    // checks every 1 second to see if any player have pressed everyone in button
+                    // loops indefently until a player has pressed the button
+                    await timeout(1000);
+                    playerChoices = await CheckEveryoneIn();
+                }
+                $("#everyone-in").css("display", "none");
+                $("#question").css("display", "inline");
+                // gets the current question card
+                response = await fetch("/return_qcard/" + gameId);
+                json = await response.json();
+                qcard = json;
+                numGaps = qcard[1];
+                gapCountdown = numGaps;
+                // displays the question card
+                $("#question").html(qcard[0]);
+                response = await fetch("/czar/" + gameId + "/" + player_id);
+                json = await response.json();
+                czar = JSON.parse(json);
+                // checks if the player is the czar or not
+                if (czar == false) {
+                    // if the player is not the czar the player is dealt some cards
+                    $("#answer").css("display", "inline");
+                    $("#submit-answer").css("display", "inline");
+                    response = await fetch("/deal_cards/" + player_id, { method: "POST" });
+                    json = await response.json();
+                    cards = json;
+                    for (let i = 0; i < 7; i++) {
+                        // loops through each answer card and populates the dropdown box with the answer cards
+                        $("#ans" + (i + 1)).html(cards[i]);
+                    }
+                } else {
+                    // sets the player choices to be false so that the code goes into the first while loop
+                    playerChoices = [false]
+                    while (playerChoices[0] == false) {
+                        // checks every 1 second to see if all the player have submitted their answer cards
+                        // loops indefently until all the players have submitted their answer card
+                        await timeout(1000);
+                        playerChoices = await CheckPlayerChoices();
+                    }
+                    // calls the function CreateDropdownCzar to create the dropdown box
+                    CreateDropdownCzar(playerChoices[1])
+                    $("#submit-choice").css("display", "inline");
+                    $("#czar-choice").css("display", "inline");
+                }
+            } else {
+                $("#join-game").css("display", "none");
+                // displays a text message infroming the user that they can not join the game
+                $("#cannot-join").css("display", "inline");
+            }
+        }
+
+        async function NextRoundStart(game_id, player_id) {
+            // after the first round is ran the rest of the rounds will be carried out here
             gapCountdown = numGaps;
-            $("#question").html(qcard[0]);
             response = await fetch("/czar/" + gameId + "/" + player_id);
             json = await response.json();
             czar = JSON.parse(json);
+            // checks if the player is the czar or not
             if (czar == false) {
+                // if the player is not the czar the player is dealt some cards
                 $("#answer").css("display", "inline");
                 $("#submit-answer").css("display", "inline");
                 response = await fetch("/deal_cards/" + player_id, { method: "POST" });
                 json = await response.json();
                 cards = json;
                 for (let i = 0; i < 7; i++) {
+                    // loops through each answer card and populates the dropdown box with the answer cards
                     $("#ans" + (i + 1)).html(cards[i]);
                 }
             } else {
+                // sets the player choices to be false so that the code goes into the first while loop
                 playerChoices = [false]
-                $("#submit-choice").css("display", "inline");
                 while (playerChoices[0] == false) {
+                    // checks every 1 second to see if all the player have submitted their answer cards
+                    // loops indefently until all the players have submitted their answer card
                     await timeout(1000);
                     playerChoices = await CheckPlayerChoices();
                 }
+                // calls the function CreateDropdownCzar to create the dropdown box
                 CreateDropdownCzar(playerChoices[1])
+                $("#submit-choice").css("display", "inline");
                 $("#czar-choice").css("display", "inline");
             }
         }
 
         async function CreateDropdownCzar(choices) {
+            // creates the dropdown box for the czar
             playerChoice = ""
-            $("#czar-choice").find("option").remove();
-            for (var choice of choices) {
-                for (var card of choice[1]) {
+            $("#czar-choice").find("option").remove(); // removes previous dropdwon box
+            for (var choice of choices) { // loops through all the choices
+                for (var card of choice[1]) { // loops through all the cards in thee choice
+                    // gets the answer card with the id card from the backend
                     response = await fetch("/answer_card/" + card);
                     json = await response.json();
                     ans = json;
                     playerChoice = playerChoice + ans["text"] + " + "
                 }
+                // creates an option in the dropdwon box with the answer cards submitted from one player, each card separated by a +
                 var option = new Option(playerChoice, choice[0]);
                 $("#czar-choice").append(option);
                 playerChoice = ""
@@ -120,29 +208,81 @@
         }
 
         async function SubmitAnswer(player_id) {
+            // submits the answer card chosen by the player
+            // checks if the remaining number of cards needed to submit is more than one
             if (gapCountdown != 1) {
                 choice = $("#answer").val();
+                // takes the answer card submitted and creates a string that will end up in the format of a list
                 listAns = listAns + choice + ",";
+                // reduces the number of cards needed to submit by one
                 gapCountdown -= 1;
+                $("#answer-submited").css("display", "inline");
+                // informs the user they have submitted their first answer card using a text message
+                await timeout(1000);
+                // hides the text message
+                $("#answer-submited").css("display", "none");
             } else {
+                // sets the czar's choice to be false so that the code goes into the first while loop further on in the code
                 czarChoice = [false]
+                // takes the answer card submitted and saves it into a string in the format of a list
                 choice = $("#answer").val();
                 listAns = listAns + choice + "]";
+                // saves the answer cards chosen in the backend
                 await fetch("/save_choice/" + player_id + "/" + listAns, { method: "POST" });
+                // removes the answer cards chosen from the list of answer cards the player has in the backend
+                await fetch("/remove_chosen_cards/" + player_id + "/" + listAns, { method: "POST" });
+                // resets the listAns for later use
                 listAns = "[";
                 $("#question").css("display", "none");
                 $("#answer").css("display", "none");
                 $("#submit-answer").css("display", "none");
                 $("#answer-submited").css("display", "inline");
                 while (czarChoice[0] == false) {
+                    // checks every 1 second to see if the czar has submitted their choice
+                    // loops indefently until all the czar has submitted their choice
                     await timeout(1000);
                     czarChoice = await CheckCzarChoice();
                 }
                 // TODO: display the points of each player
+                // checks if the player was the one who won the point or not
                 if (czarChoice[1] == player_id) {
                     $("#answer-submited").html("Congratulations, you won the round!!!");
                 } else {
                     $("#answer-submited").html("Unfortunately, you didnt win the round");
+                }
+                await timeout(5000);
+                $("#answer-submited").css("display", "none");
+                $("#answer-submited").html("Answer Submitted");
+                // after 5 seconds checks if any player has gotten enough points to win the game
+                response = await fetch("/check_game_finish/" + gameId + "/" + numPointsToWin);
+                json = await response.json();
+                game_finished = json;
+                // chekcs if the game finished
+                if (game_finished[0] == true) {
+                    winnerID = game_finished[1]
+                    // checks if the player is the winner
+                    if (winnerID == player_id) {
+                        // displays a text message telling the player they won the game
+                        $("#game-finished").css("display", "inline");
+                        $("#winner").css("display", "inline");
+                    } else {
+                        // displays a text message telling the player they did not win the game
+                        $("#game-finished").css("display", "inline");
+                        $("#loser").css("display", "inline");
+                    }
+                } else {
+                    // starts the next round
+                    $("#answer-submited").css("display", "none");
+                    $("#answer-submited").html("Answer submitted");
+                    $("#question").css("display", "inline");
+                    // finds the new question card
+                    response = await fetch("/return_qcard/" + gameId);
+                    json = await response.json();
+                    qcard = json;
+                    numGaps = qcard[1];
+                    $("#question").html(qcard[0]);
+                    // calls the function NextRoundStart to star the next round
+                    NextRoundStart(gameId, player_id)
                 }
             }
         }
@@ -152,7 +292,16 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
+        async function CheckEveryoneIn() {
+            // checks if any player has pressed the everyone is in button
+            response = await fetch("/check_EveryoneIn/" + gameId);
+            json = await response.json();
+            everyoneInPressed = json;
+            return everyoneInPressed;
+        }
+
         async function CheckCzarChoice() {
+            // checks if the Czar has submitted thei choice
             response = await fetch("/return_czar_choice/" + gameId);
             json = await response.json();
             choice = json;
@@ -160,6 +309,7 @@
         }
 
         async function CheckPlayerChoices() {
+            // checks if all the players have submitted their answer cards
             response = await fetch("/return_choices/" + gameId);
             json = await response.json();
             choice = json;
@@ -167,16 +317,45 @@
         }
 
         async function SubmitChoice(player_id) {
+            // gets the player's id of the player that submitted the set of answer cards chosen by the czar
             pointWinner = $("#czar-choice").val();
+            // gives a point to the winner of the round
             await fetch("/give_points/" + player_id + "/" + pointWinner, { method: "POST" });
+            // displays a text message informing the player they submitted their choice successfully
             $("#choice-submited").css("display", "inline");
             $("#submit-choice").css("display", "none");
             $("#czar-choice").css("display", "none");
             $("#question").css("display", "none");
+            await timeout(5000);
+            // after 5 seconds gets the number of points the player who won the round has
+            $("#choice-submited").css("display", "none");
+            response = await fetch("/num_points/" + pointWinner);
+            json = await response.json();
+            points = JSON.parse(json);
+            // checks if the winner of the round has enough points to win the game
+            if (points == numPointsToWin) {
+                // displays a text message informing the player they did not win the game
+                $("#game-finished").css("display", "inline");
+                $("#loser").css("display", "inline");
+            } else {
+                // deals a new question card
+                response = await fetch("/deal_qcard/" + gameId, { method: "POST" });
+                json = await response.json();
+                qcard = json;
+                numGaps = qcard[1]
+                $("#question").css("display", "inline");
+                $("#question").html(qcard[0]);
+                // changes the current czar to a different one and resets all the choices submitted by the players
+                await fetch("/reset_choices/" + gameId, { method: "POST" });
+                await fetch("/change_czar/" + gameId, { method: "POST" });
+                // calls the function NextRoundStart to start the next round
+                NextRoundStart(gameId, player_id)
+            }
         }
 
         async function EveryoneIn() {
-            await fetch("/???");
+            // changes the propery EveryoneIn in the Game in the db so that the game can start
+            await fetch("/everyone_in/" + gameId, { method: "POST" });
         }
 
 
@@ -192,6 +371,10 @@
     b = $("#ans" + (i + 1)).html();
     $("#ans" + (i + 2)).html(b);
 
+        */
+
+        /* TODO
+        block the joining of the game when the everyone is in button is pressed
         */
 
     </script>
