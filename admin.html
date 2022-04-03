@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Cards Against Humanity</title>
+</head>
+
+<body>
+
+    <button type="button" onclick="ResetGame()">reset game</button>
+    
+    <div id="done" style="display: none;">
+        <span>Done</span>
+    </div>
+
+    <script>
+        gameId = 1
+
+        async function ResetGame() {
+            // resets the game
+            await fetch("/reset_game/" + gameId, { method: "POST" });
+            // displays a message informing the admin that the game has been reset
+            $("#done").css("display", "inline");
+            await timeout(1000);
+            // hides the text message
+            $("#done").css("display", "none");
+        }
+
+        // https://stackoverflow.com/questions/33289726/combination-of-async-function-await-settimeout
+        function timeout(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+    </script>
+
+</body>
+
+</html>

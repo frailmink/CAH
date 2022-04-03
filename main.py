@@ -341,6 +341,28 @@ async def return_czar_choice(game_id: int):
         choice_in = False
     return choice_in, czar_choice
 
+@app.post("/reset_game/{game_id}")
+async def reset_game(game_id: int):
+    # this function will only be used in the admin page and it will reste the game so that the players can keep playing
+    temp_list = []
+    # resets the game in the database
+    cur.execute(f"UPDATE Games SET ListPlayerID = '[]' WHERE id = {game_id}")
+    cur.execute(f"UPDATE Games SET EveryoneIn = 0 WHERE id = {game_id}")
+    await deal_qcard(game_id)
+    # loops through all the player ids in the database and delets them
+    # for now the code will delete all the players in the db, however, later if there are more than one game only the players of the game that is being reset mus tbe deleted
+    # make list of the players and then delet them so that it does not stop deleting the players prematurely 
+    for index in cur.execute(f"SELECT id FROM Players"):
+        temp_list.append(index[0])
+    for index in temp_list:
+        await delete_player(index)
+    con.commit()
+
+@app.get("/admin")
+async def admin():
+    #returns the front end code for the admin page
+    return HTMLResponse(open("admin.html", "rt").read())
+
 @app.get("/")
 async def root():
     #returns the front end code so that it can be run
