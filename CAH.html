@@ -79,6 +79,7 @@
         var gapCountdown = 0;
         var listAns = "[";
         var numPointsToWin = 2;
+        var oldCzar = 0;
 
         async function CreatePlayer() {
             // creates a new player in the databse and saves the player's id
@@ -121,6 +122,10 @@
                 response = await fetch("/czar/" + gameId + "/" + player_id);
                 json = await response.json();
                 czar = JSON.parse(json);
+                // saves the old cars id
+                response = await fetch("/return_czarID/" + gameId);
+                json = await response.json();
+                oldCzar = JSON.parse(json);
                 // checks if the player is the czar or not
                 if (czar == false) {
                     // if the player is not the czar the player is dealt some cards
@@ -160,6 +165,10 @@
             response = await fetch("/czar/" + gameId + "/" + player_id);
             json = await response.json();
             czar = JSON.parse(json);
+            // saves the old cars id
+            response = await fetch("/return_czarID/" + gameId);
+            json = await response.json();
+            oldCzar = JSON.parse(json);
             // checks if the player is the czar or not
             if (czar == false) {
                 // if the player is not the czar the player is dealt some cards
@@ -306,8 +315,8 @@
         }
 
         async function CheckCzarChoice() {
-            // checks if the Czar has submitted thei choice
-            response = await fetch("/return_czar_choice/" + gameId);
+            // checks if the Czar has submitted their choice
+            response = await fetch("/return_czar_choice/" + oldCzar);
             json = await response.json();
             choice = json;
             return choice;
@@ -322,6 +331,14 @@
         }
 
         async function SubmitChoice(player_id) {
+            // deals a new question card
+            response = await fetch("/deal_qcard/" + gameId, { method: "POST" });
+            json = await response.json();
+            qcard = json;
+            numGaps = qcard[1]
+            $("#question").html(qcard[0]);
+            // changes the current czar to a different one
+            await fetch("/change_czar/" + gameId, { method: "POST" });
             // gets the player's id of the player that submitted the set of answer cards chosen by the czar
             pointWinner = $("#czar-choice").val();
             // gives a point to the winner of the round
@@ -343,16 +360,10 @@
                 $("#game-finished").css("display", "inline");
                 $("#loser").css("display", "inline");
             } else {
-                // deals a new question card
-                response = await fetch("/deal_qcard/" + gameId, { method: "POST" });
-                json = await response.json();
-                qcard = json;
-                numGaps = qcard[1]
-                $("#question").css("display", "inline");
-                $("#question").html(qcard[0]);
-                // changes the current czar to a different one and resets all the choices submitted by the players
+                // resets all the choices submitted by the players
                 await fetch("/reset_choices/" + gameId, { method: "POST" });
-                await fetch("/change_czar/" + gameId, { method: "POST" });
+                // displays question card
+                $("#question").css("display", "inline");
                 // calls the function NextRoundStart to start the next round
                 NextRoundStart(gameId, player_id)
             }

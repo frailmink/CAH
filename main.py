@@ -141,6 +141,12 @@ async def num_question_cards():
     # returns the value of the list
     return count[0]
 
+@app.get("/return_czarID/{game_id}") 
+async def czar(game_id: int):
+    # returns the czar id
+    czar_id = cur.execute(f"SELECT CzarID FROM Games WHERE id = {game_id}").fetchone()[0]
+    return czar_id
+
 @app.get("/czar/{game_id}/{player_id}") 
 async def czar(game_id: int, player_id: int):
     # checks if the player is the current czar
@@ -329,11 +335,10 @@ async def give_points(czar_id: int, point_winner: int):
     con.commit()
     return points
 
-@app.get("/return_czar_choice/{game_id}")
-async def return_czar_choice(game_id: int):
+@app.get("/return_czar_choice/{czar_id}")
+async def return_czar_choice(czar_id: int):
     # checks if the player has submitted their choice and if they have it returns it
     choice_in = True
-    czar_id = cur.execute(f"SELECT CzarID FROM Games WHERE id = {game_id}").fetchone()[0]
     czar_choice = cur.execute(f"SELECT choice FROM Players WHERE id = {czar_id}").fetchone()[0]
     # checks if the czar has chosen a set of cards
     # the empty choices can either be (NULL) or None
