@@ -96,6 +96,7 @@ async def deal_qcard(game_id: int):
             keep_going = False
     # gets the question card from the db with the id gotten from the random number
     cur.execute(f"UPDATE Games SET QCard = '{rand_int}' WHERE id = {game_id}")
+    con.commit()
     q_card = await question_card(rand_int)
     return q_card["text"], q_card["num_gaps"]
 
