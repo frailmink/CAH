@@ -1,9 +1,6 @@
 # run this with uvicorn main:app and go to http://localhost:8000
 # for testing go to http://localhost:8000/docs
 
-from ctypes import pointer
-import string
-from typing import Awaitable
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 import sqlite3
